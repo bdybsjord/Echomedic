@@ -1,0 +1,22 @@
+# node
+node_modules
+pnpm-lock.yaml
+
+# vite build output
+dist
+
+# logs
+*.log
+logs
+
+# env config
+.env
+.env.*
+
+# system/IDE
+.DS_Store
+.vscode
+*.swp
+
+# misc
+*.local

@@ -1,0 +1,33 @@
+name: CI – Lint og Build
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@v3
+
+      - name: Sett opp Node og pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Sett opp Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Installer avhengigheter
+        run: pnpm install
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Bygg prosjektet
+        run: pnpm run build
