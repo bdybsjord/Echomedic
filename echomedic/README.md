@@ -1,7 +1,7 @@
 # Echomedic Dashboard
 
 Dette er en React-applikasjon utviklet som del av bachelorprosjektet i PRO203 – Smidig prosjekt (Høsten 2025).  
-Løsningen er et lettvekts dashboard for informasjonssikkerhet og risikostyring for helseselskapet Echomedic.
+Løsningen er et dashboard for informasjonssikkerhet og risikostyring for helseselskapet Echomedic.
 
 ---
 
