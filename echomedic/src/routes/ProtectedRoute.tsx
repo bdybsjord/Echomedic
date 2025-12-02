@@ -1,7 +1,28 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import type { LoginRedirectState } from "../context/authTypes";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+type ProtectedRouteProps = {
+  children: React.ReactNode;
+};
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isLoggedIn } = useAuth();
-  return isLoggedIn ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    const state: LoginRedirectState = {
+      from: { pathname: location.pathname },
+    };
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={state}
+      />
+    );
+  }
+
+  return <>{children}</>;
 }

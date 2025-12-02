@@ -1,23 +1,43 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
+import type { AuthUser } from "./AuthContext";
+import type { LoginRedirectState } from "./authTypes";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+type AuthProviderProps = {
+  children: React.ReactNode;
+};
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<AuthUser | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const login = () => {
-    setIsLoggedIn(true);
-    navigate("/");
+  const isLoggedIn = !!user;
+
+  const login = (email: string) => {
+    const trimmed = email.trim();
+
+    const demoUser: AuthUser = {
+      email: trimmed || "leder@echomedic.no",
+      name: "Echomedic-leder",
+    };
+
+    setUser(demoUser);
+
+    const state = location.state as LoginRedirectState | null;
+    const from = state?.from?.pathname ?? "/";
+
+    navigate(from, { replace: true });
   };
 
   const logout = () => {
-    setIsLoggedIn(false);
-    navigate("/login");
+    setUser(null);
+    navigate("/login", { replace: true });
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
