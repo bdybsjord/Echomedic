@@ -3,7 +3,8 @@ import { useAuth } from "../context/useAuth";
 
 const navLinkBase =
   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors";
-const navLinkInactive = "text-slate-400 hover:bg-slate-800/80 hover:text-white";
+const navLinkInactive =
+  "text-slate-400 hover:bg-slate-800/80 hover:text-white";
 const navLinkActive = "bg-slate-900 text-slate-50 shadow-inner";
 
 export default function Sidebar() {
@@ -18,7 +19,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-50">Echomedic</p>
-            <p className="text-xs text-slate-400">Security & Risk Portal</p>
+            <p className="text-xs text-slate-400">Security &amp; Risk Portal</p>
           </div>
         </div>
       </div>
@@ -67,7 +68,7 @@ export default function Sidebar() {
         <div className="mt-auto pt-4 border-t border-slate-800/80 text-[11px] text-slate-500">
           <p>Echomedic – intern prototype</p>
           <p className="text-slate-600">
-            Sprint 1 · Pålogging & risikoliste (UI)
+            Sprint 1 · Pålogging &amp; risikoliste (UI)
           </p>
         </div>
       </nav>

@@ -84,6 +84,9 @@ export default function Login() {
       if (remember) {
         localStorage.setItem(LAST_USER_KEY, email.trim().toLowerCase());
       }
+
+      // Optional: gå til dashboard etter innlogging
+      navigate("/", { replace: true });
     } catch (err: unknown) {
       let message = "Innlogging feilet. Prøv igjen.";
       if (typeof err === "object" && err && "code" in err) {
@@ -166,10 +169,11 @@ export default function Login() {
               Logg inn til risiko-dashboard
             </h2>
             <p className="mt-1 text-xs text-slate-400">
-              Bruk demo-bruker{" "}
+              Bruk lederbruker{" "}
               <span className="font-mono text-cyan-300">
                 leder@echomedic.no
               </span>{" "}
+              fra Firebase Auth i Sprint 2. Ingen ekte pasientdata brukes.
             </p>
           </div>
 
@@ -212,7 +216,6 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Form-feil – annonsert for skjermlesere */}
             {formError && (
               <div
                 className="rounded-lg border border-rose-500/60 bg-rose-950/40 px-3 py-2 text-xs text-rose-100"
