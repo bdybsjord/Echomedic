@@ -67,7 +67,6 @@ export default function Login() {
     const validation = validate();
     setErrors(validation);
 
-    // Fokus på første feilfelt
     if (validation.email && emailRef.current) {
       emailRef.current.focus();
       return;
@@ -79,27 +78,28 @@ export default function Login() {
 
     setIsSubmitting(true);
 
-    // Fake “backend”-delay
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    try {
+      await login(email.trim(), password.trim());
 
-    const emailNormalized = email.trim().toLowerCase();
-    if (emailNormalized !== "leder@echomedic.no") {
-      setFormError(
-        "Innlogging feilet. Sjekk e-post og passord (mock-feil for demo)."
-      );
+      if (remember) {
+        localStorage.setItem(LAST_USER_KEY, email.trim().toLowerCase());
+      }
+    } catch (err: unknown) {
+      let message = "Innlogging feilet. Prøv igjen.";
+      if (typeof err === "object" && err && "code" in err) {
+        const code = (err as { code?: string }).code;
+        if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+          message = "Feil e-post eller passord.";
+        } else if (code === "auth/user-not-found") {
+          message = "Ingen bruker med denne e-posten.";
+        } else if (code === "auth/too-many-requests") {
+          message = "For mange forsøk. Vent litt og prøv igjen.";
+        }
+      }
+      setFormError(message);
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    login(emailNormalized);
-
-    if (remember) {
-      // I senere sprint kan vi lagre JWT/token i secure storage.
-      localStorage.setItem(LAST_USER_KEY, emailNormalized);
-    }
-
-    setIsSubmitting(false);
-    navigate("/", { replace: true });
   };
 
   const disableSubmit = !isFormValid() || isSubmitting;

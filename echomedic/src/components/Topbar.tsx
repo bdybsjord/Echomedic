@@ -18,7 +18,7 @@ export default function Topbar() {
         <div className="flex items-center gap-4">
           <div className="text-right text-xs">
             <p className="font-medium text-slate-100">
-              {user?.name ?? "Innlogget leder"}
+              {user?.displayName ?? "Innlogget leder"}
             </p>
             <p className="text-slate-400">{user?.email}</p>
           </div>
