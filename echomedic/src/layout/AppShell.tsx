@@ -1,14 +1,19 @@
+import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell() {
   return (
-    <div className="flex">
+    <div className="echomedic-gradient min-h-screen flex text-slate-50">
       <Sidebar />
-      <div className="flex-1 min-h-screen bg-gray-50">
+
+      <div className="flex flex-1 flex-col backdrop-blur-xl bg-slate-950/40">
         <Topbar />
-        <main className="p-6">{children}</main>
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
 }
+
