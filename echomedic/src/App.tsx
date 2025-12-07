@@ -1,14 +1,7 @@
-import AppShell from "./layout/AppShell";
-import Dashboard from "./pages/Dashboard";
-
-// Midlertidig
+import { AppRoutes } from "./routes/AppRoutes";
 
 function App() {
-  return (
-    <AppShell>
-      <Dashboard />
-    </AppShell>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
