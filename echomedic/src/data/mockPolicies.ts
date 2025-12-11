@@ -1,24 +1,15 @@
-import type { Policy } from "../types/policy";
-
-// Utvidet interface for mock-data med status
-// Status er ikke i domain-modell ennå, men trengs for UI
-export type PolicyStatus = "Gyldig" | "Under revisjon";
-
-export interface MockPolicy extends Policy {
-  status: PolicyStatus;
-  updatedAt: Date;
-}
+import type { Policy, PolicyStatus } from "../types/policy";
 
 // Mock data for sikkerhetspolicyer
 // Dette erstattes senere med API-kall
-export const mockPolicies: MockPolicy[] = [
+export const mockPolicies: Policy[] = [
   {
     id: "POL-001",
     title: "Policy for tilgangskontroll",
     category: "Tilgang",
     version: "2.1",
     body: "Dette dokumentet beskriver prosedyrer for tilgangskontroll til informasjonssystemer.",
-    status: "Gyldig",
+    status: "Gyldig" as PolicyStatus,
     createdAt: new Date("2024-10-15"),
     updatedAt: new Date("2024-11-20"),
   },
@@ -113,4 +104,3 @@ export const mockPolicies: MockPolicy[] = [
     updatedAt: new Date("2024-11-30"),
   },
 ];
-

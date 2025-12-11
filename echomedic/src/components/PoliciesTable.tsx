@@ -1,12 +1,11 @@
-import type { MockPolicy } from "../data/mockPolicies";
+import { Link } from "react-router-dom";
+import type { Policy } from "../types/policy";
 import PolicyStatusBadge from "./PolicyStatusBadge";
 
 interface PoliciesTableProps {
-  policies: MockPolicy[];
+  policies: Policy[];
 }
 
-// Komponent for å vise tabell over sikkerhetspolicyer
-// Matcher designet fra RiskTable og ControlsTable
 export default function PoliciesTable({ policies }: PoliciesTableProps) {
   if (policies.length === 0) {
     return (
@@ -56,9 +55,12 @@ export default function PoliciesTable({ policies }: PoliciesTableProps) {
               className="hover:bg-slate-900/40 transition-colors"
             >
               <td className="px-6 py-4">
-                <div className="text-sm font-medium text-slate-50">
+                <Link
+                  to={`/policies/${policy.id}`}
+                  className="text-sm font-medium text-slate-50 hover:underline"
+                >
                   {policy.title}
-                </div>
+                </Link>
                 <div className="text-xs text-slate-400 mt-1">
                   {policy.category}
                 </div>
@@ -85,4 +87,3 @@ export default function PoliciesTable({ policies }: PoliciesTableProps) {
     </div>
   );
 }
-

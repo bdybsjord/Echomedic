@@ -1,29 +1,43 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import PoliciesTable from "../components/PoliciesTable";
-import { mockPolicies, type PolicyStatus } from "../data/mockPolicies";
+import { mockPolicies } from "../data/mockPolicies";
+import type { PolicyStatus } from "../types/policy";
+import { usePolicies } from "../hooks/usePolicies";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 
 // Policies-siden - viser oversikt over alle sikkerhetspolicyer
 // Sortert etter endret dato (nyeste først)
+// Radene i PoliciesTable linker videre til detaljsiden (/policies/:id)
 export default function PoliciesPage() {
-  const [selectedFilter, setSelectedFilter] = useState<PolicyStatus | "Alle">("Alle");
+  const { policies, loading, error } = usePolicies();
+  const [selectedFilter, setSelectedFilter] = useState<PolicyStatus | "Alle">(
+    "Alle",
+  );
 
-  // Filtrerer policyer basert på valgt filter
+  // Bruk Firestore-data hvis vi har det, ellers mock
+  const sourcePolicies = policies.length > 0 ? policies : mockPolicies;
+
+  // Filtrerer policyer basert på valgt filter + sorterer på updatedAt (nyeste først)
   const filteredPolicies = useMemo(() => {
     const filtered =
       selectedFilter === "Alle"
-        ? mockPolicies
-        : mockPolicies.filter((policy) => policy.status === selectedFilter);
-    
-    // Sorter etter endret dato (nyeste først)
+        ? sourcePolicies
+        : sourcePolicies.filter((policy) => policy.status === selectedFilter);
+
     return [...filtered].sort(
-      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
     );
-  }, [selectedFilter]);
+  }, [selectedFilter, sourcePolicies]);
 
   // Beregner statistikk
-  const totalPolicies = mockPolicies.length;
-  const validPolicies = mockPolicies.filter((p) => p.status === "Gyldig").length;
-  const underRevision = mockPolicies.filter((p) => p.status === "Under revisjon").length;
+  const totalPolicies = sourcePolicies.length;
+  const validPolicies = sourcePolicies.filter(
+    (p) => p.status === "Gyldig",
+  ).length;
+  const underRevision = sourcePolicies.filter(
+    (p) => p.status === "Under revisjon",
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -33,28 +47,39 @@ export default function PoliciesPage() {
             Sikkerhetspolicyer
           </h2>
           <p className="text-sm text-slate-400">
-            Oversikt over alle sikkerhetspolicyer, versjoner og status (mock-data i Sprint 1).
+            Oversikt over alle sikkerhetspolicyer, versjoner og status. Klikk
+            på en policy for å se detaljert innhold.
           </p>
         </div>
 
         <div className="flex gap-3 text-xs">
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Totalt antall policyer</span>
-            <span className="text-lg font-semibold text-slate-50">{totalPolicies}</span>
+            <span className="text-lg font-semibold text-slate-50">
+              {totalPolicies}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Gyldig</span>
-            <span className="text-lg font-semibold text-emerald-400">{validPolicies}</span>
+            <span className="text-lg font-semibold text-emerald-400">
+              {validPolicies}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Under revisjon</span>
-            <span className="text-lg font-semibold text-amber-400">{underRevision}</span>
+            <span className="text-lg font-semibold text-amber-400">
+              {underRevision}
+            </span>
           </div>
         </div>
       </header>
 
       {/* Filter-knapper */}
-      <div className="flex gap-2 flex-wrap" role="group" aria-label="Filtrer policystatus">
+      <div
+        className="flex gap-2 flex-wrap"
+        role="group"
+        aria-label="Filtrer policystatus"
+      >
         <button
           onClick={() => setSelectedFilter("Alle")}
           aria-pressed={selectedFilter === "Alle"}
@@ -90,9 +115,10 @@ export default function PoliciesPage() {
         </button>
       </div>
 
-      {/* PoliciesTable komponenten viser filtrerte og sorterte policyer */}
-      <PoliciesTable policies={filteredPolicies} />
+      {loading && <LoadingSpinner />}
+      {error && <ErrorBanner message={error} />}
+
+      {!loading && !error && <PoliciesTable policies={filteredPolicies} />}
     </div>
   );
 }
-

@@ -1,22 +1,39 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ControlsTable from "../components/ControlsTable";
 import { mockControls } from "../data/mockControls";
 import type { ControlStatus } from "../types/control";
+import { useControls } from "../hooks/useControls";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { ErrorBanner } from "../components/common/ErrorBanner";
 
 export default function ControlsPage() {
-  const [selectedFilter, setSelectedFilter] = useState<ControlStatus | "Alle">("Alle");
+  const { controls, loading, error } = useControls();
+  const [selectedFilter, setSelectedFilter] = useState<ControlStatus | "Alle">(
+    "Alle",
+  );
+
+  // Bruker ekte Firestore-data hvis vi har noe, ellers mock
+  const sourceControls = controls.length > 0 ? controls : mockControls;
 
   // Filtrerer kontroller basert på valgt filter
-  const filteredControls =
-    selectedFilter === "Alle"
-      ? mockControls
-      : mockControls.filter((control) => control.status === selectedFilter);
+  const filteredControls = useMemo(() => {
+    if (selectedFilter === "Alle") return sourceControls;
+    return sourceControls.filter(
+      (control) => control.status === selectedFilter,
+    );
+  }, [sourceControls, selectedFilter]);
 
-  // Beregner statistikk
-  const totalControls = mockControls.length;
-  const implementedControls = mockControls.filter((c) => c.status === "Implemented").length;
-  const plannedControls = mockControls.filter((c) => c.status === "Planned").length;
-  const notRelevantControls = mockControls.filter((c) => c.status === "NotRelevant").length;
+  // Beregner statistikk basert på datakilden vi faktisk bruker
+  const totalControls = sourceControls.length;
+  const implementedControls = sourceControls.filter(
+    (c) => c.status === "Implemented",
+  ).length;
+  const plannedControls = sourceControls.filter(
+    (c) => c.status === "Planned",
+  ).length;
+  const notRelevantControls = sourceControls.filter(
+    (c) => c.status === "NotRelevant",
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -26,32 +43,45 @@ export default function ControlsPage() {
             Sikkerhetskontroller (SoA)
           </h2>
           <p className="text-sm text-slate-400">
-            Oversikt over implementeringsstatus for sikkerhetskontroller basert på ISO 27001 (mock-data i Sprint 1).
+            Oversikt over implementeringsstatus for sikkerhetskontroller basert
+            på ISO 27001.
           </p>
         </div>
 
         <div className="flex gap-3 text-xs">
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Totalt antall kontroller</span>
-            <span className="text-lg font-semibold text-slate-50">{totalControls}</span>
+            <span className="text-lg font-semibold text-slate-50">
+              {totalControls}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Implementert</span>
-            <span className="text-lg font-semibold text-emerald-400">{implementedControls}</span>
+            <span className="text-lg font-semibold text-emerald-400">
+              {implementedControls}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Delvis</span>
-            <span className="text-lg font-semibold text-amber-400">{plannedControls}</span>
+            <span className="text-lg font-semibold text-amber-400">
+              {plannedControls}
+            </span>
           </div>
           <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
             <span className="text-slate-400">Ikke implementert</span>
-            <span className="text-lg font-semibold text-slate-400">{notRelevantControls}</span>
+            <span className="text-lg font-semibold text-slate-400">
+              {notRelevantControls}
+            </span>
           </div>
         </div>
       </header>
 
       {/* Filter-knapper */}
-      <div className="flex gap-2 flex-wrap" role="group" aria-label="Filtrer kontrollstatus">
+      <div
+        className="flex gap-2 flex-wrap"
+        role="group"
+        aria-label="Filtrer kontrollstatus"
+      >
         <button
           onClick={() => setSelectedFilter("Alle")}
           aria-pressed={selectedFilter === "Alle"}
@@ -98,9 +128,10 @@ export default function ControlsPage() {
         </button>
       </div>
 
-      {/* ControlsTable komponenten viser filtrerte kontroller */}
-      <ControlsTable controls={filteredControls} />
+      {loading && <LoadingSpinner />}
+      {error && <ErrorBanner message={error} />}
+
+      {!loading && !error && <ControlsTable controls={filteredControls} />}
     </div>
   );
 }
-

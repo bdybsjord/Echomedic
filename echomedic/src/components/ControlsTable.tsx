@@ -71,11 +71,13 @@ export default function ControlsTable({ controls }: ControlsTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-slate-300">
-                    {(control as any).owner || "-"}
+                    {control.owner ?? "-"}
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm text-slate-300">{control.description}</div>
+                  <div className="text-sm text-slate-300">
+                    {control.description}
+                  </div>
                 </td>
               </tr>
             ))
@@ -85,4 +87,3 @@ export default function ControlsTable({ controls }: ControlsTableProps) {
     </div>
   );
 }
-
