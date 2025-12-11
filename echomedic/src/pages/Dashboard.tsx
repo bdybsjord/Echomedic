@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { useRisks } from "../hooks/useRisks";
+import { useControls } from "../hooks/useControls";
+import { usePolicies } from "../hooks/usePolicies";
 import Card from "../components/ui/Card";
 import RiskTable from "../components/RiskTable";
 import RiskLevelBadge from "../components/RiskLevelBadge";
 import type { Risk } from "../types/risk";
+import type { Control } from "../types/control";
+import type { Policy } from "../types/policy";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ErrorBanner } from "../components/common/ErrorBanner";
 import { mockRisks } from "../data/mockRisks";
+import { mockControls } from "../data/mockControls";
+import { mockPolicies } from "../data/mockPolicies";
 import { mapMockRisksToDomain } from "../adapters/mockRiskAdapter";
 
 // Mock-trend
@@ -19,26 +25,50 @@ const trendData: { month: string; count: number }[] = [
   { month: "Jun", count: 6 },
 ];
 
-// Mock-kategorier
-const categoryData = [
+// Mock-kategorier (foreløpig ikke koblet til faktisk kategori-felt)
+const categoryData: { label: string; value: number; color: string }[] = [
   { label: "Teknisk", value: 7, color: "bg-cyan-400" },
   { label: "Prosess", value: 4, color: "bg-violet-300" },
   { label: "Personell", value: 3, color: "bg-fuchsia-400" },
 ];
 
 export default function Dashboard() {
-  const { risks, loading, error } = useRisks();
+  const {
+    risks,
+    loading: risksLoading,
+    error: risksError,
+  } = useRisks();
 
-  // Loading/error
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorBanner message={error} />;
+  const {
+    controls,
+    loading: controlsLoading,
+    error: controlsError,
+  } = useControls();
 
-  // Bruk mock hvis databasen er tom
+  const {
+    policies,
+    loading: policiesLoading,
+    error: policiesError,
+  } = usePolicies();
+
+  const isLoading = risksLoading || controlsLoading || policiesLoading;
+  const firstError = risksError || controlsError || policiesError;
+
+  if (isLoading) return <LoadingSpinner />;
+  if (firstError) return <ErrorBanner message={firstError} />;
+
+  // Fallback til mock-data hvis Firestore er tomt
   const displayRisks: Risk[] =
     risks.length > 0 ? risks : mapMockRisksToDomain(mockRisks);
 
-  // KPI-beregninger
-  const total = displayRisks.length;
+  const displayControls: Control[] =
+    controls.length > 0 ? controls : mockControls;
+
+  const displayPolicies: Policy[] =
+    policies.length > 0 ? policies : (mockPolicies as unknown as Policy[]);
+
+  // Risiko-KPIer
+  const totalRisks = displayRisks.length;
   const high = displayRisks.filter((r) => r.level === "High").length;
   const medium = displayRisks.filter((r) => r.level === "Medium").length;
   const low = displayRisks.filter((r) => r.level === "Low").length;
@@ -47,8 +77,6 @@ export default function Dashboard() {
     (r) => r.status === "Open" || r.status === "InProgress",
   ).length;
   const closed = displayRisks.filter((r) => r.status === "Closed").length;
-
-  const lastUpdated = new Date().toLocaleDateString("nb-NO");
 
   const topHigh = [...displayRisks]
     .filter((r) => r.level === "High")
@@ -59,11 +87,29 @@ export default function Dashboard() {
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 5);
 
+  // SoA / Controls-KPIer
+  const totalControls = displayControls.length;
+  const implementedControls = displayControls.filter(
+    (c) => c.status === "Implemented",
+  ).length;
+
+  // Policy-KPIer (nå uten any)
+  const totalPolicies = displayPolicies.length;
+  const validPolicies = displayPolicies.filter(
+    (p) => p.status === "Gyldig",
+  ).length;
+  const underRevision = displayPolicies.filter(
+    (p) => p.status === "Under revisjon",
+  ).length;
+
+  // Mock-kategorier til donut
   const totalCategory = categoryData.reduce((s, c) => s + c.value, 0);
   const categoryWithPct = categoryData.map((c) => ({
     ...c,
     pct: Math.round((c.value / totalCategory) * 100),
   }));
+
+  const lastUpdated = new Date().toLocaleDateString("nb-NO");
 
   return (
     <div className="space-y-8">
@@ -78,7 +124,8 @@ export default function Dashboard() {
           </h2>
 
           <p className="mt-2 max-w-xl text-sm text-slate-400">
-            Oversikt over nøkkeltall, trender og kritiske risikoer.
+            Oversikt over risikonivå, styrende kontroller (SoA) og
+            sikkerhetspolicyer i Echomedic.
           </p>
         </div>
 
@@ -92,16 +139,20 @@ export default function Dashboard() {
 
       {/* KPI-KORT */}
       <section className="grid gap-4 md:grid-cols-4">
+        {/* Totalt antall risikoer */}
         <Card className="flex flex-col gap-1 border-violet-500/30 bg-slate-950/60 shadow-[0_0_40px_rgba(88,28,135,0.35)]">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Totalt antall risikoer
           </span>
-          <span className="text-3xl font-semibold text-slate-50">{total}</span>
+          <span className="text-3xl font-semibold text-slate-50">
+            {totalRisks}
+          </span>
           <span className="text-xs text-slate-500">
             Alle registrerte risikoer i registeret.
           </span>
         </Card>
 
+        {/* Fordeling risikonivå */}
         <Card className="flex flex-col gap-2">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Fordeling risikonivå
@@ -122,6 +173,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
+        {/* Status på risikoer */}
         <Card className="flex flex-col gap-2">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Status på risikoer
@@ -141,15 +193,43 @@ export default function Dashboard() {
           </span>
         </Card>
 
+        {/* Styringsgrunnlag: kontroller + policyer */}
         <Card className="flex flex-col gap-2">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Fokus for Sprint 2
+            Styring &amp; kontroll
           </span>
-          <ul className="space-y-1 text-xs text-slate-300">
-            <li>• Firestore som datakilde</li>
-            <li>• Ny risiko &amp; detaljer</li>
-            <li>• Dashboard med KPI-er og topp 3</li>
-          </ul>
+          <div className="space-y-1 text-xs text-slate-300">
+            <p>
+              <span className="font-semibold text-slate-50">
+                {implementedControls}/{totalControls}
+              </span>{" "}
+              kontroller implementert (SoA).
+            </p>
+            <p>
+              <span className="font-semibold text-slate-50">
+                {validPolicies}/{totalPolicies}
+              </span>{" "}
+              policyer gyldige,{" "}
+              <span className="text-amber-300">
+                {underRevision} under revisjon
+              </span>
+              .
+            </p>
+          </div>
+          <div className="mt-1 flex gap-2 text-[11px]">
+            <Link
+              to="/controls"
+              className="text-violet-300 hover:text-violet-200"
+            >
+              Se kontroller →
+            </Link>
+            <Link
+              to="/policies"
+              className="text-cyan-300 hover:text-cyan-200"
+            >
+              Se policyer →
+            </Link>
+          </div>
         </Card>
       </section>
 
@@ -157,9 +237,12 @@ export default function Dashboard() {
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         {/* TREND */}
         <Card>
-          <h3 className="mb-4 text-sm font-semibold text-slate-50">
+          <h3 className="mb-1 text-sm font-semibold text-slate-50">
             Utvikling i antall risikoer (mock)
           </h3>
+          <p className="text-xs text-slate-400">
+            Illustrativ trend – kobles til historiske data i senere sprint.
+          </p>
 
           <div className="mt-4 flex h-40 items-end gap-3 border-t border-slate-800 pt-4">
             {trendData.map((item) => {
@@ -194,7 +277,7 @@ export default function Dashboard() {
               Risikoer per kategori (mock)
             </h3>
             <p className="text-xs text-slate-400">
-              Kategorier kobles mot reelle data i senere sprint.
+              Kategorier kobles mot reell risikokategori i senere sprint.
             </p>
           </div>
 
