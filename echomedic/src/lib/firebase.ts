@@ -2,6 +2,9 @@ import { initializeApp, type FirebaseOptions } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+console.log("API KEY PROD:", import.meta.env.VITE_FIREBASE_API_KEY);
+
+
 // Henter Firebase-config fra miljøvariabler
 const firebaseConfig: FirebaseOptions = {
   apiKey: import.meta.env["VITE_FIREBASE_API_KEY"],
