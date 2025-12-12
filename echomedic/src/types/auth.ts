@@ -1,5 +1,5 @@
 // Mulige roller for bruker
-export type UserRole = "leder" | "leser";
+export type UserRole = "leder" | "leser" | "admin";
 
 // Brukerobjekt vi lagrer i appen
 export type AuthUser = {

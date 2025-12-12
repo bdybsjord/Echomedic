@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -13,6 +14,8 @@ import {
 } from "firebase/firestore";
 import { firebaseDb } from "../lib/firebase";
 import type { Risk, RiskLevel, RiskStatus } from "../types/risk";
+import type { AuthUser } from "../types/auth";
+import { logAuditEvent } from "./auditLogService";
 
 const RISKS_COLLECTION = "risks";
 
@@ -26,7 +29,6 @@ export interface RiskInput {
   status: RiskStatus;
 }
 
-// Shape på dokumentet i Firestore (det vi forventer å finne)
 interface RiskDocData {
   title?: string;
   description?: string;
@@ -109,12 +111,14 @@ export const fetchRiskById = async (id: string): Promise<Risk | null> => {
 
   if (!snap.exists()) return null;
 
-  // getDoc, DocumentSnapshot, så vi castere til QueryDocumentSnapshot<DocumentData>
   return mapDocToRisk(snap as QueryDocumentSnapshot<DocumentData>);
 };
 
-// Opprett ny risiko
-export const createRisk = async (input: RiskInput): Promise<string> => {
+// Opprett ny risiko + AUDIT
+export const createRisk = async (
+  input: RiskInput,
+  user: AuthUser,
+): Promise<string> => {
   const score = calculateScore(input.likelihood, input.consequence);
   const level = calculateLevel(score);
   const now = new Date();
@@ -127,16 +131,36 @@ export const createRisk = async (input: RiskInput): Promise<string> => {
     updatedAt: now,
   });
 
+  await logAuditEvent({
+    action: "RISK_CREATED",
+    riskId: ref.id,
+    description: `Risiko opprettet: ${input.title}`,
+    user,
+    before: null,
+    after: {
+      ...input,
+      score,
+      level,
+    },
+  });
+
   return ref.id;
 };
 
-// Oppdater eksisterende risiko (partial update)
+// Oppdater eksisterende risiko (partial update) + AUDIT
 export const updateRisk = async (
   id: string,
   input: Partial<RiskInput>,
+  user: AuthUser,
 ): Promise<void> => {
   const ref = doc(firebaseDb, RISKS_COLLECTION, id);
   const now = new Date();
+
+  // Hent "før"-data til audit-logg
+  const existingSnap = await getDoc(ref);
+  const beforeData = existingSnap.exists()
+    ? (existingSnap.data() as RiskDocData)
+    : null;
 
   const updateData: Record<string, unknown> = {
     ...input,
@@ -148,11 +172,42 @@ export const updateRisk = async (
     typeof input.consequence === "number"
   ) {
     const score = calculateScore(input.likelihood, input.consequence);
-
     updateData["score"] = score;
     updateData["level"] = calculateLevel(score);
   }
 
   await updateDoc(ref, updateData);
+
+  await logAuditEvent({
+    action: "RISK_UPDATED",
+    riskId: id,
+    description: `Risiko oppdatert (${id})`,
+    user,
+    before: beforeData,
+    after: updateData,
+  });
 };
 
+// Slett risiko + AUDIT
+export const deleteRisk = async (
+  id: string,
+  user: AuthUser,
+): Promise<void> => {
+  const ref = doc(firebaseDb, RISKS_COLLECTION, id);
+
+  const existingSnap = await getDoc(ref);
+  const beforeData = existingSnap.exists()
+    ? (existingSnap.data() as RiskDocData)
+    : null;
+
+  await deleteDoc(ref);
+
+  await logAuditEvent({
+    action: "RISK_DELETED",
+    riskId: id,
+    description: `Risiko slettet (${id})`,
+    user,
+    before: beforeData,
+    after: null,
+  });
+};

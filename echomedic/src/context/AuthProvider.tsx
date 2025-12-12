@@ -8,23 +8,44 @@ import {
 } from "firebase/auth";
 import { firebaseAuth } from "../lib/firebase";
 import { AuthContext } from "./AuthContext";
-import type { AuthUser, LoginRedirectState } from "../types/auth";
-
+import type { AuthUser, LoginRedirectState, UserRole } from "../types/auth";
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
 
-// Mapper Firebase User til vår AuthUser med rolle
+// ADMIN-WHITELIST
+const ADMIN_EMAILS = [
+  "bedy002@egms.no",
+  "admin@echomedic.no",
+];
+
+// LESER-WHITELIST – kun lesetilgang
+const READER_EMAILS = [
+  "bruker@echomedic.no",
+];
+
+// Mapper Firebase User: AuthUser med rollelogikk
 function mapUser(user: User | null): AuthUser | null {
   if (!user) return null;
 
-  // Rolle kan hentes fra Firestore senere – nå default "leder"
+  const email = user.email ?? "";
+
+  let role: UserRole;
+
+  if (ADMIN_EMAILS.includes(email)) {
+    role = "admin";
+  } else if (READER_EMAILS.includes(email)) {
+    role = "leser";
+  } else {
+    role = "leder";
+  }
+
   return {
     uid: user.uid,
     email: user.email,
     displayName: user.displayName,
-    role: "leder",
+    role,
   };
 }
 
@@ -37,7 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const isLoggedIn = !!user;
 
-  // Hold appen og Firebase i sync
+  // Sync med Firebase Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(firebaseAuth, (fbUser) => {
       setUser(mapUser(fbUser));
@@ -50,11 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const cred = await signInWithEmailAndPassword(
-        firebaseAuth,
-        email,
-        password,
-      );
+      const cred = await signInWithEmailAndPassword(firebaseAuth, email, password);
       setUser(mapUser(cred.user));
 
       const state = location.state as LoginRedirectState | null;
@@ -77,9 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoggedIn, isLoading, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, isLoggedIn, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

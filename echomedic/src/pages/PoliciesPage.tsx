@@ -1,19 +1,26 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PoliciesTable from "../components/PoliciesTable";
 import { mockPolicies } from "../data/mockPolicies";
 import type { PolicyStatus } from "../types/policy";
 import { usePolicies } from "../hooks/usePolicies";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ErrorBanner } from "../components/common/ErrorBanner";
+import { useAuth } from "../context/useAuth";
 
 // Policies-siden - viser oversikt over alle sikkerhetspolicyer
 // Sortert etter endret dato (nyeste først)
 // Radene i PoliciesTable linker videre til detaljsiden (/policies/:id)
 export default function PoliciesPage() {
   const { policies, loading, error } = usePolicies();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [selectedFilter, setSelectedFilter] = useState<PolicyStatus | "Alle">(
     "Alle",
   );
+
+  const isReader = user?.role === "leser";
 
   // Bruk Firestore-data hvis vi har det, ellers mock
   const sourcePolicies = policies.length > 0 ? policies : mockPolicies;
@@ -52,25 +59,37 @@ export default function PoliciesPage() {
           </p>
         </div>
 
-        <div className="flex gap-3 text-xs">
-          <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
-            <span className="text-slate-400">Totalt antall policyer</span>
-            <span className="text-lg font-semibold text-slate-50">
-              {totalPolicies}
-            </span>
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="flex gap-3 text-xs">
+            <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
+              <span className="text-slate-400">Totalt antall policyer</span>
+              <span className="text-lg font-semibold text-slate-50">
+                {totalPolicies}
+              </span>
+            </div>
+            <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
+              <span className="text-slate-400">Gyldig</span>
+              <span className="text-lg font-semibold text-emerald-400">
+                {validPolicies}
+              </span>
+            </div>
+            <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
+              <span className="text-slate-400">Under revisjon</span>
+              <span className="text-lg font-semibold text-amber-400">
+                {underRevision}
+              </span>
+            </div>
           </div>
-          <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
-            <span className="text-slate-400">Gyldig</span>
-            <span className="text-lg font-semibold text-emerald-400">
-              {validPolicies}
-            </span>
-          </div>
-          <div className="rounded-2xl bg-slate-900/80 px-4 py-2 border border-slate-800 flex flex-col">
-            <span className="text-slate-400">Under revisjon</span>
-            <span className="text-lg font-semibold text-amber-400">
-              {underRevision}
-            </span>
-          </div>
+
+          {!isReader && (
+            <button
+              type="button"
+              onClick={() => navigate("/policies/new")}
+              className="inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-2 text-sm font-medium text-slate-950 shadow-[0_0_24px_rgba(139,92,246,0.7)] hover:from-violet-400 hover:to-fuchsia-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+              Ny policy
+            </button>
+          )}
         </div>
       </header>
 

@@ -3,26 +3,46 @@ import { useAuth } from "../context/useAuth";
 export default function Topbar() {
   const { isLoggedIn, user, logout } = useAuth();
 
-  const displayName = user?.displayName || "Leder Echomedic";
-  const email = user?.email || "leder@echomedic.no";
+  const roleDisplayName =
+    user?.role === "admin"
+      ? "Administrator"
+      : user?.role === "leder"
+        ? "Leder"
+        : user?.role === "leser"
+          ? "Lesebruker"
+          : "Bruker";
+
+  const displayName = roleDisplayName;
+  const email = user?.email || "bruker@echomedic.no";
+
   const initial =
-    (user?.displayName?.trim().charAt(0) ||
+    (roleDisplayName.trim().charAt(0) ||
       user?.email?.trim().charAt(0) ||
       "E"
     ).toUpperCase();
 
+  const isAdmin = user?.role === "admin";
+
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-800 bg-slate-950/90 px-6 py-3 backdrop-blur-xl">
-      {/* Venstre: produkt / side-info */}
-      <div>
-        {/* Trenger vi noe her? */}
-      </div>
+      {/* Venstre: tom inntil videre */}
+      <div />
 
-      {/* Høyre: bruker / logout */}
+      {/* Høyre: brukerinfo */}
       {isLoggedIn && (
         <div className="flex items-center gap-4">
           <div className="hidden text-right text-xs sm:block">
-            <p className="font-medium text-slate-100">{displayName}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-slate-100">{displayName}</p>
+
+              {/* ADMIN BADGE */}
+              {isAdmin && (
+                <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)]">
+                  Admin
+                </span>
+              )}
+            </div>
+
             <p className="text-slate-400">{email}</p>
           </div>
 

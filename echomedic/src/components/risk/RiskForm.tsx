@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import type { RiskInput } from "../../services/riskService";
 import type { RiskStatus } from "../../types/risk";
+import { ErrorBanner } from "../common/ErrorBanner";
 
 interface Props {
   initial?: Partial<RiskInput>;
@@ -9,7 +10,11 @@ interface Props {
   submitLabel?: string;
 }
 
-export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) => {
+export const RiskForm = ({
+  initial,
+  onSubmit,
+  submitLabel = "Lagre",
+}: Props) => {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [likelihood, setLikelihood] = useState(initial?.likelihood ?? 3);
@@ -46,7 +51,7 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
       });
     } catch (err) {
       console.error(err);
-      setError("Noe gikk galt ved lagring av risiko");
+      setError("Noe gikk galt ved lagring av risiko.");
     } finally {
       setSubmitting(false);
     }
@@ -55,19 +60,15 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
   const score = likelihood * consequence;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800" role="alert">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && <ErrorBanner message={error} />}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Tittel<span className="text-red-500">*</span>
+        <label className="block text-xs font-medium text-slate-300 mb-1">
+          Tittel<span className="text-rose-400">*</span>
         </label>
         <input
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -75,9 +76,11 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Beskrivelse</label>
+        <label className="block text-xs font-medium text-slate-300 mb-1">
+          Beskrivelse
+        </label>
         <textarea
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -86,11 +89,11 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
 
       <div className="grid gap-4 md:grid-cols-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-xs font-medium text-slate-300 mb-1">
             Sannsynlighet (1–5)
           </label>
           <select
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
             value={likelihood}
             onChange={(e) => setLikelihood(Number(e.target.value))}
           >
@@ -101,12 +104,13 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
             ))}
           </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-xs font-medium text-slate-300 mb-1">
             Konsekvens (1–5)
           </label>
           <select
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
             value={consequence}
             onChange={(e) => setConsequence(Number(e.target.value))}
           >
@@ -117,16 +121,26 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
             ))}
           </select>
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700">Score</label>
-          <div className="mt-2 text-sm font-semibold text-gray-900">{score}</div>
+          <label className="block text-xs font-medium text-slate-300 mb-1">
+            Score
+          </label>
+          <div className="mt-2 text-sm font-mono font-semibold text-slate-100">
+            {score}
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Beregnes som sannsynlighet × konsekvens.
+          </p>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Tiltak</label>
+        <label className="block text-xs font-medium text-slate-300 mb-1">
+          Tiltak
+        </label>
         <textarea
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
           rows={3}
           value={measures}
           onChange={(e) => setMeasures(e.target.value)}
@@ -135,20 +149,22 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Eier/ansvarlig<span className="text-red-500">*</span>
+          <label className="block text-xs font-medium text-slate-300 mb-1">
+            Eier/ansvarlig<span className="text-rose-400">*</span>
           </label>
           <input
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Status</label>
+          <label className="block text-xs font-medium text-slate-300 mb-1">
+            Status
+          </label>
           <select
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
             value={status}
             onChange={(e) => setStatus(e.target.value as RiskStatus)}
           >
@@ -159,13 +175,13 @@ export const RiskForm = ({ initial, onSubmit, submitLabel = "Lagre" }: Props) =>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-2">
         <button
           type="submit"
-          className="inline-flex items-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-60"
+          className="inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-medium text-slate-950 shadow-[0_0_24px_rgba(139,92,246,0.7)] hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-60"
           disabled={submitting}
         >
-          {submitting ? "Lagrer..." : submitLabel}
+          {submitting ? "Lagrer…" : submitLabel}
         </button>
       </div>
     </form>

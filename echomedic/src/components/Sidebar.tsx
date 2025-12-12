@@ -9,7 +9,8 @@ const active =
   "bg-slate-900/90 text-slate-50 shadow-[0_0_24px_rgba(15,23,42,0.7)] border border-violet-600/60";
 
 export default function Sidebar() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   return (
     <aside
@@ -105,6 +106,27 @@ export default function Sidebar() {
             </li>
           </ul>
         </div>
+
+        {/* ADMIN – kun for admin-rolle */}
+        {isAdmin && (
+          <div>
+            <p className="mb-2 px-1 text-[11px]">Admin</p>
+            <ul className="space-y-1">
+              <li>
+                <NavLink
+                  to="/admin/audit-log"
+                  className={({ isActive }) =>
+                    `${base} ${isActive ? active : inactive}`
+                  }
+                >
+                  <span className="h-5 w-1 rounded-full bg-amber-400/80 shadow-[0_0_10px_rgba(251,191,36,0.9)]" />
+                  <span className="h-2 w-2 rounded-full bg-amber-400/90" />
+                  <span>Audit-logg</span>
+                </NavLink>
+              </li>
+            </ul>
+          </div>
+        )}
 
         {/* TILGANG (hvis ikke innlogget) */}
         {!isLoggedIn && (

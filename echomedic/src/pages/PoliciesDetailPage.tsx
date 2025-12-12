@@ -1,15 +1,55 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { usePolicies } from "../hooks/usePolicies";
 import PolicyStatusBadge from "../components/PolicyStatusBadge";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ErrorBanner } from "../components/common/ErrorBanner";
+import { useAuth } from "../context/useAuth";
+import { deletePolicy } from "../services/policyService";
+import { mockPolicies } from "../data/mockPolicies";
 
 export default function PolicyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { policies, loading, error } = usePolicies();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Finn aktuell policy basert på id fra URL
-  const policy = policies.find((p) => p.id === id);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const isReader = user?.role === "leser";
+  const canManage = !!user && !isReader;
+
+  // Finn policy fra Firestore først
+  let policy = policies.find((p) => p.id === id);
+
+  // Hvis ikke funnet i Firestore – sjekk mockPolicies
+  if (!policy && id) {
+    const mock = mockPolicies.find((m) => m.id === id);
+    if (mock) {
+      policy = mock;
+    }
+  }
+
+  // Hindrer at vi prøver å slette mock-policyer
+  const isMockPolicy = id ? mockPolicies.some((m) => m.id === id) : false;
+
+  const handleDelete = async () => {
+    if (!policy || !user || isMockPolicy) return;
+
+    const confirmed = window.confirm(
+      `Er du sikker på at du vil slette policyen "${policy.title}"?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleteError(null);
+      await deletePolicy(policy.id, user);
+      navigate("/policies");
+    } catch (err) {
+      console.error(err);
+      setDeleteError("Kunne ikke slette policy. Prøv igjen.");
+    }
+  };
 
   if (loading) {
     return (
@@ -63,8 +103,35 @@ export default function PolicyDetailPage() {
               day: "numeric",
             })}
           </p>
+
+          {canManage && !isMockPolicy && (
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => navigate(`/policies/${policy.id}/edit`)}
+                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:bg-slate-900"
+              >
+                Rediger
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-full border border-rose-500/70 bg-rose-500/10 px-3 py-1 text-xs text-rose-200 hover:bg-rose-500/20"
+              >
+                Slett
+              </button>
+            </div>
+          )}
+
+          {isMockPolicy && (
+            <p className="text-[10px] text-slate-500">
+              Demo-policy (mock) – kan ikke slettes.
+            </p>
+          )}
         </div>
       </div>
+
+      {deleteError && <ErrorBanner message={deleteError} />}
 
       {/* Info-kort */}
       <section className="grid gap-4 md:grid-cols-3">

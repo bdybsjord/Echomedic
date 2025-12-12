@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { fetchRiskById } from "../services/riskService";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { fetchRiskById, deleteRisk } from "../services/riskService";
 import type { Risk } from "../types/risk";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ErrorBanner } from "../components/common/ErrorBanner";
@@ -8,12 +8,22 @@ import RiskLevelBadge from "../components/RiskLevelBadge";
 import RiskStatusBadge from "../components/RiskStatusBadge";
 import { mockRisks } from "../data/mockRisks";
 import { mapMockRiskToDomain } from "../adapters/mockRiskAdapter";
+import { useAuth } from "../context/useAuth";
 
 export const RiskDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [risk, setRisk] = useState<Risk | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const isReader = user?.role === "leser";
+  const canManage = !!user && !isReader;
+
+  // Brukes for å unngå at vi prøver å slette mock-data
+  const isMockRisk = id ? mockRisks.some((m) => m.id === id) : false;
 
   useEffect(() => {
     if (!id) return;
@@ -39,6 +49,23 @@ export const RiskDetailPage = () => {
     void load();
   }, [id]);
 
+  const handleDelete = async () => {
+    if (!risk || !user || isMockRisk) return;
+
+    const confirmed = window.confirm(
+      "Er du sikker på at du vil slette denne risikoen? Dette kan ikke angres.",
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteRisk(risk.id, user);
+      navigate("/risks");
+    } catch (err) {
+      console.error(err);
+      setError("Kunne ikke slette risiko.");
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorBanner message={error} />;
   if (!risk) return null;
@@ -52,12 +79,41 @@ export const RiskDetailPage = () => {
             {risk.title}
           </h1>
         </div>
-        <Link
-          to="/risks"
-          className="text-sm font-medium text-violet-300 hover:text-violet-200"
-        >
-          ← Tilbake til register
-        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link
+            to="/risks"
+            className="text-sm font-medium text-violet-300 hover:text-violet-200"
+          >
+            ← Tilbake til register
+          </Link>
+
+          {canManage && !isMockRisk && (
+            <>
+              {/* Edit-side: /risks/:id/edit */}
+              <button
+                type="button"
+                onClick={() => navigate(`/risks/${risk.id}/edit`)}
+                className="rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-900"
+              >
+                Rediger
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-full border border-rose-500/70 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/20"
+              >
+                Slett
+              </button>
+            </>
+          )}
+
+          {isMockRisk && (
+            <p className="text-[10px] text-slate-500">
+              Demo-risiko (mock) – kan ikke slettes.
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
