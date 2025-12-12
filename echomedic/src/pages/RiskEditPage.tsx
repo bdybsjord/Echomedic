@@ -1,4 +1,3 @@
-// src/pages/RiskEditPage.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { fetchRiskById, updateRisk, type RiskInput } from "../services/riskService";
