@@ -19,7 +19,7 @@ body {
     "Segoe UI", sans-serif;
 }
 
-/* Felles gradient bakgrunner – matcher Echomedic sin hero, men mørkere */
+/* Felles gradient bakgrunner */
 .echomedic-gradient {
   background:
     radial-gradient(circle at top left, rgba(34, 211, 238, 0.4) 0, transparent 55%),

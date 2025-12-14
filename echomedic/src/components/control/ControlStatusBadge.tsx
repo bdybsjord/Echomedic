@@ -1,4 +1,4 @@
-import type { ControlStatus } from "../types/control";
+import type { ControlStatus } from "../../types/control";
 
 interface ControlStatusBadgeProps {
   status: ControlStatus;

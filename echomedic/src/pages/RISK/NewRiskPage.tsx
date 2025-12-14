@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { RiskForm } from "../components/risk/RiskForm";
-import { createRisk, type RiskInput } from "../services/riskService";
-import { useAuth } from "../context/useAuth";
-import { ErrorBanner } from "../components/common/ErrorBanner";
+import { RiskForm } from "../../components/risk/RiskForm";
+import { createRisk, type RiskInput } from "../../services/riskService";
+import { useAuth } from "../../context/useAuth";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
 
 export const NewRiskPage = () => {
   const navigate = useNavigate();

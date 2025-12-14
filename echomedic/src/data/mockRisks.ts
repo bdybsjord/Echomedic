@@ -7,7 +7,7 @@ export type RiskStatus = "Åpen" | "Under behandling" | "Lukket";
 // Interface for Risk - definerer strukturen på risiko-objektene
 // Bruker interface fordi vi kan utvide den senere hvis vi trenger det
 
-// Utvidet litt - Benedikte
+// Utvidet litt - B
 export interface Risk {
   id: string;
   name: string; // kort tittel

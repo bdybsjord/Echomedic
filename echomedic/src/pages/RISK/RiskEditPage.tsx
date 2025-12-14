@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { fetchRiskById, updateRisk, type RiskInput } from "../services/riskService";
-import type { Risk } from "../types/risk";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { ErrorBanner } from "../components/common/ErrorBanner";
-import { RiskForm } from "../components/risk/RiskForm";
-import { mockRisks } from "../data/mockRisks";
-import { mapMockRiskToDomain } from "../adapters/mockRiskAdapter";
-import { useAuth } from "../context/useAuth";
+import { fetchRiskById, updateRisk, type RiskInput } from "../../services/riskService";
+import type { Risk } from "../../types/risk";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
+import { RiskForm } from "../../components/risk/RiskForm";
+import { mockRisks } from "../../data/mockRisks";
+import { mapMockRiskToDomain } from "../../adapters/mockRiskAdapter";
+import { useAuth } from "../../context/useAuth";
 
 export default function RiskEditPage() {
   const { id } = useParams<{ id: string }>();

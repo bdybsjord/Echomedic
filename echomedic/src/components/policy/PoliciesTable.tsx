@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Policy } from "../types/policy";
+import type { Policy } from "../../types/policy";
 import PolicyStatusBadge from "./PolicyStatusBadge";
 
 interface PoliciesTableProps {

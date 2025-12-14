@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { usePolicies } from "../hooks/usePolicies";
-import PolicyStatusBadge from "../components/PolicyStatusBadge";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { ErrorBanner } from "../components/common/ErrorBanner";
-import { useAuth } from "../context/useAuth";
-import { deletePolicy } from "../services/policyService";
-import { mockPolicies } from "../data/mockPolicies";
+import { usePolicies } from "../../hooks/usePolicies";
+import PolicyStatusBadge from "../../components/policy/PolicyStatusBadge";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
+import { useAuth } from "../../context/useAuth";
+import { deletePolicy } from "../../services/policyService";
+import { mockPolicies } from "../../data/mockPolicies";
 
 export default function PolicyDetailPage() {
   const { id } = useParams<{ id: string }>();

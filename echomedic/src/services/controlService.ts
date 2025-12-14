@@ -63,19 +63,22 @@ export interface ControlInput {
   owner?: string;
 }
 
-// Opprett ny kontroll + audit-logg
 export const createControl = async (
   input: ControlInput,
   user?: AuthUser,
 ): Promise<string> => {
-  const ref = await addDoc(collection(firebaseDb, CONTROLS_COLLECTION), {
-    isoId: input.isoId,
-    title: input.title,
-    description: input.description,
+  const payload: Record<string, unknown> = {
+    isoId: input.isoId.trim(),
+    title: input.title.trim(),
+    description: input.description.trim(),
     status: input.status,
-    justification: input.justification ?? null,
-    owner: input.owner ?? null,
-  });
+    ...(input.justification?.trim()
+      ? { justification: input.justification.trim() }
+      : {}),
+    ...(input.owner?.trim() ? { owner: input.owner.trim() } : {}),
+  };
+
+  const ref = await addDoc(collection(firebaseDb, CONTROLS_COLLECTION), payload);
 
   if (user) {
     await logAuditEvent({
@@ -84,14 +87,14 @@ export const createControl = async (
       controlId: ref.id,
       user,
       before: null,
-      after: input,
+      after: payload,
     });
   }
 
   return ref.id;
 };
 
-// Oppdater kontroll + audit-logg
+
 export const updateControl = async (
   id: string,
   input: Partial<ControlInput>,
@@ -102,9 +105,18 @@ export const updateControl = async (
   const beforeSnap = await getDoc(ref);
   const beforeData = beforeSnap.exists() ? beforeSnap.data() : null;
 
-  await updateDoc(ref, {
-    ...input,
-  });
+  const patch: Record<string, unknown> = {};
+
+  if (typeof input.isoId === "string" && input.isoId.trim()) patch.isoId = input.isoId.trim();
+  if (typeof input.title === "string" && input.title.trim()) patch.title = input.title.trim();
+  if (typeof input.description === "string" && input.description.trim())
+    patch.description = input.description.trim();
+  if (input.status) patch.status = input.status;
+  if (typeof input.justification === "string" && input.justification.trim())
+    patch.justification = input.justification.trim();
+  if (typeof input.owner === "string" && input.owner.trim()) patch.owner = input.owner.trim();
+
+  await updateDoc(ref, patch);
 
   if (user) {
     await logAuditEvent({
@@ -113,7 +125,7 @@ export const updateControl = async (
       controlId: id,
       user,
       before: beforeData,
-      after: input,
+      after: patch,
     });
   }
 };

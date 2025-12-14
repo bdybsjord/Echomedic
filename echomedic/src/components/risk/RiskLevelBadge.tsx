@@ -1,4 +1,4 @@
-import type { RiskLevel } from "../types/risk";
+import type { RiskLevel } from "../../types/risk";
 
 // Komponent for å vise risikonivå med farger
 // Bruker objekt med level som key for å mappe til riktig styling

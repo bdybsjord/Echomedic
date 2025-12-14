@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { useRisks } from "../hooks/useRisks";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { ErrorBanner } from "../components/common/ErrorBanner";
-import RiskTable from "../components/RiskTable";
-import { mockRisks } from "../data/mockRisks";
-import { mapMockRisksToDomain } from "../adapters/mockRiskAdapter";
-import type { Risk } from "../types/risk";
-import { useAuth } from "../context/useAuth";
+import { useRisks } from "../../hooks/useRisks";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
+import RiskTable from "../../components/risk/RiskTable";
+import { mockRisks } from "../../data/mockRisks";
+import { mapMockRisksToDomain } from "../../adapters/mockRiskAdapter";
+import type { Risk } from "../../types/risk";
+import { useAuth } from "../../context/useAuth";
 
 export const RisksPage = () => {
   const { risks, loading, error } = useRisks();

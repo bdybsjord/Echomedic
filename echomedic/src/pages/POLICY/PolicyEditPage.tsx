@@ -1,11 +1,11 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { usePolicies } from "../hooks/usePolicies";
+import { usePolicies } from "../../hooks/usePolicies";
 import { useState } from "react";
-import { useAuth } from "../context/useAuth";
-import { updatePolicy } from "../services/policyService";
-import type { PolicyStatus } from "../types/policy";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { ErrorBanner } from "../components/common/ErrorBanner";
+import { useAuth } from "../../context/useAuth";
+import { updatePolicy } from "../../services/policyService";
+import type { PolicyStatus } from "../../types/policy";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
 
 type PolicyFormState = {
   title: string;

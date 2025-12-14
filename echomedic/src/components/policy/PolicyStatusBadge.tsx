@@ -1,4 +1,4 @@
-import type { PolicyStatus } from "../types/policy";
+import type { PolicyStatus } from "../../types/policy";
 
 interface PolicyStatusBadgeProps {
   status: PolicyStatus;

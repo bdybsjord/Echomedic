@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
-import type { Control } from "../types/control";
+import { useAuth } from "../../context/useAuth";
+import type { Control } from "../../types/control";
 import ControlStatusBadge from "./ControlStatusBadge";
-import { deleteControl } from "../services/controlService";
+import { deleteControl } from "../../services/controlService";
 
 interface ControlsTableProps {
   controls: Control[];

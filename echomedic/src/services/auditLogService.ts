@@ -20,7 +20,7 @@ export interface AuditLogPayload {
   // hvem gjorde det
   user: AuthUser;
 
-  // domene-kontekst (en av disse vil typisk være satt)
+  // domene-kontekst
   riskId?: string;
   controlId?: string;
   policyId?: string;

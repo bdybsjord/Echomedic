@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 // Login-side med fokus på tilgjengelighet
-// Student B - støtteoppgave: Tilgjengelighet & UX
 export default function Login() {
   // State for form-data
   const [email, setEmail] = useState("");

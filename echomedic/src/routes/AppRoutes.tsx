@@ -8,21 +8,21 @@ import Login from "../pages/LoginPage";
 import Dashboard from "../pages/Dashboard";
 
 // RISKS
-import { RisksPage } from "../pages/RisksPage";
-import { NewRiskPage } from "../pages/NewRiskPage";
-import { RiskDetailPage } from "../pages/RiskDetailPage";
-import RiskEditPage from "../pages/RiskEditPage";
+import { RisksPage } from "../pages/RISK/RisksPage";
+import { NewRiskPage } from "../pages/RISK/NewRiskPage";
+import { RiskDetailPage } from "../pages/RISK/RiskDetailPage";
+import RiskEditPage from "../pages/RISK/RiskEditPage";
 
 // CONTROLS
-import ControlsPage from "../pages/ControlsPage";
-import NewControlPage from "../pages/NewControlPage";
-import ControlEditPage from "../pages/ControlEditPage";
+import ControlsPage from "../pages/CONTROL/ControlsPage";
+import NewControlPage from "../pages/CONTROL/NewControlPage";
+import ControlEditPage from "../pages/CONTROL/ControlEditPage";
 
 // POLICIES
-import PoliciesPage from "../pages/PoliciesPage";
-import PolicyDetailPage from "../pages/PoliciesDetailPage";
-import NewPolicyPage from "../pages/NewPolicyPage";
-import PolicyEditPage from "../pages/PolicyEditPage";
+import PoliciesPage from "../pages/POLICY/PoliciesPage";
+import PolicyDetailPage from "../pages/POLICY/PoliciesDetailPage";
+import NewPolicyPage from "../pages/POLICY/NewPolicyPage";
+import PolicyEditPage from "../pages/POLICY/PolicyEditPage";
 
 // ADMIN
 import { AdminAuditLogPage } from "../pages/AdminAuditLogPage";

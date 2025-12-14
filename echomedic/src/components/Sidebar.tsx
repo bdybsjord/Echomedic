@@ -20,18 +20,15 @@ export default function Sidebar() {
       {/* LOGO / BRAND */}
       <div className="mb-8">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400 via-violet-500 to-fuchsia-500 opacity-80" />
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-2xl bg-slate-950 text-xs font-bold text-slate-50 shadow-[0_0_20px_rgba(56,189,248,0.7)]">
-              {/* Simplifisert Echomedic-symbol */}
-              <div className="grid h-5 w-5 grid-cols-2 gap-0.5">
-                <span className="rounded-full border border-violet-400/80" />
-                <span className="rounded-full border border-cyan-400/80" />
-                <span className="rounded-full border border-fuchsia-400/80" />
-                <span className="rounded-full border border-slate-400/70" />
-              </div>
-            </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 shadow-inner">
+            <img
+              src="/echomedic-ikon.png"
+              alt="Echomedic logo"
+              className="h-8 w-8 object-contain"
+              loading="eager"
+            />
           </div>
+
           <div>
             <p className="text-sm font-semibold text-slate-50">Echomedic</p>
             <p className="text-xs text-slate-400">
@@ -107,7 +104,7 @@ export default function Sidebar() {
           </ul>
         </div>
 
-        {/* ADMIN – kun for admin-rolle */}
+        {/* ADMIN */}
         {isAdmin && (
           <div>
             <p className="mb-2 px-1 text-[11px]">Admin</p>
@@ -128,7 +125,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* TILGANG (hvis ikke innlogget) */}
+        {/* TILGANG */}
         {!isLoggedIn && (
           <div>
             <p className="mb-2 px-1 text-[11px]">Tilgang</p>

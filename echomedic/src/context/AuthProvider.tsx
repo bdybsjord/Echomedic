@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   onAuthStateChanged,
@@ -8,44 +8,22 @@ import {
 } from "firebase/auth";
 import { firebaseAuth } from "../lib/firebase";
 import { AuthContext } from "./AuthContext";
-import type { AuthUser, LoginRedirectState, UserRole } from "../types/auth";
+import type { AuthUser, LoginRedirectState } from "../types/auth";
+import { roleFromEmail } from "./role";
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
 
-// ADMIN-WHITELIST
-const ADMIN_EMAILS = [
-  "bedy002@egms.no",
-  "admin@echomedic.no",
-];
-
-// LESER-WHITELIST – kun lesetilgang
-const READER_EMAILS = [
-  "bruker@echomedic.no",
-];
-
-// Mapper Firebase User: AuthUser med rollelogikk
+// Mapper Firebase User: vår AuthUser med rolle (fra e-post)
 function mapUser(user: User | null): AuthUser | null {
   if (!user) return null;
-
-  const email = user.email ?? "";
-
-  let role: UserRole;
-
-  if (ADMIN_EMAILS.includes(email)) {
-    role = "admin";
-  } else if (READER_EMAILS.includes(email)) {
-    role = "leser";
-  } else {
-    role = "leder";
-  }
 
   return {
     uid: user.uid,
     email: user.email,
     displayName: user.displayName,
-    role,
+    role: roleFromEmail(user.email),
   };
 }
 
@@ -56,7 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isLoggedIn = !!user;
+  const isLoggedIn = useMemo(() => !!user, [user]);
 
   // Sync med Firebase Auth
   useEffect(() => {
@@ -77,6 +55,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const state = location.state as LoginRedirectState | null;
       const from = state?.from?.pathname ?? "/";
       navigate(from, { replace: true });
+    } catch (err) {
+      console.error(err);
+      throw err;
     } finally {
       setIsLoading(false);
     }

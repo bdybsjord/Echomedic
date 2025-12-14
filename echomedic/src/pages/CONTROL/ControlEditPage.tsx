@@ -1,45 +1,59 @@
-import type React from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import type { ControlStatus } from "../types/control";
-import { createControl, type ControlInput } from "../services/controlService";
-import { useAuth } from "../context/useAuth";
-import { ErrorBanner } from "../components/common/ErrorBanner";
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useControls } from "../../hooks/useControls";
+import type { Control, ControlStatus } from "../../types/control";
+import { useAuth } from "../../context/useAuth";
+import { updateControl } from "../../services/controlService";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { ErrorBanner } from "../../components/common/ErrorBanner";
 
-const defaultStatus: ControlStatus = "Planned";
+type ControlFormState = {
+  isoId: string;
+  title: string;
+  description: string;
+  status: ControlStatus;
+  justification: string;
+  owner: string;
+};
 
-export default function NewControlPage() {
+export default function ControlEditPage() {
+  const { id } = useParams<{ id: string }>();
+  const { controls, loading, error } = useControls();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<ControlInput>({
-    isoId: "",
-    title: "",
-    description: "",
-    status: defaultStatus,
-    justification: "",
-    owner: "",
-  });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const isReader = user?.role === "leser";
+  const canManage = !!user && !isReader;
 
-  if (!user) {
-    return (
-      <p className="text-sm text-slate-300">
-        Du må være innlogget for å opprette en kontroll.
-      </p>
-    );
-  }
+  const control: Control | undefined = useMemo(
+    () => controls.find((c) => c.id === id),
+    [controls, id],
+  );
 
-  if (isReader) {
-    return (
-      <p className="text-sm text-slate-300">
-        Du har kun lesetilgang og kan ikke opprette nye kontroller.
-      </p>
-    );
+  const [form, setForm] = useState<ControlFormState | null>(
+    control
+      ? {
+          isoId: control.isoId,
+          title: control.title,
+          description: control.description,
+          status: control.status,
+          justification: control.justification ?? "",
+          owner: control.owner ?? "",
+        }
+      : null,
+  );
+
+  // Oppdater form når kontroll lastes inn async
+  if (!form && control) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    setForm({
+      isoId: control.isoId,
+      title: control.title,
+      description: control.description,
+      status: control.status,
+      justification: control.justification ?? "",
+      owner: control.owner ?? "",
+    });
   }
 
   const handleChange = (
@@ -47,52 +61,87 @@ export default function NewControlPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
+    if (!form) return;
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) =>
+      prev
+        ? {
+            ...prev,
+            [name]: value,
+          }
+        : prev,
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    if (!id || !form || !user || !canManage) return;
 
     try {
-      await createControl(
+      await updateControl(
+        id,
         {
           isoId: form.isoId.trim(),
           title: form.title.trim(),
           description: form.description.trim(),
           status: form.status,
-          justification: form.justification?.trim() || undefined,
-          owner: form.owner?.trim() || undefined,
+          justification: form.justification.trim() || undefined,
+          owner: form.owner.trim() || undefined,
         },
-        user, // sender hele AuthUser til audit-loggen
+        user,
       );
 
       navigate("/controls");
     } catch (err) {
       console.error(err);
-      setError("Kunne ikke opprette kontroll. Prøv igjen.");
-    } finally {
-      setIsSubmitting(false);
+      alert("Kunne ikke oppdatere kontroll. Prøv igjen.");
     }
   };
 
+  if (!user) {
+    return (
+      <p className="text-sm text-slate-300">
+        Du må være innlogget for å redigere en kontroll.
+      </p>
+    );
+  }
+
+  if (isReader) {
+    return (
+      <p className="text-sm text-slate-300">
+        Du har kun lesetilgang og kan ikke redigere kontroller.
+      </p>
+    );
+  }
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error || !control || !form) {
+    return <ErrorBanner message={error ?? "Fant ikke kontroll"} />;
+  }
+
   return (
     <div className="max-w-3xl space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-50">
-          Ny sikkerhetskontroll
-        </h1>
-        <p className="text-sm text-slate-400">
-          Registrer en ny kontroll i Statement of Applicability (SoA).
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-500 mb-1">
+            <Link
+              to="/controls"
+              className="text-slate-300 hover:text-slate-50"
+            >
+              ← Tilbake til oversikt
+            </Link>
+          </p>
+          <h1 className="text-xl font-semibold text-slate-50">
+            Rediger sikkerhetskontroll
+          </h1>
+          <p className="text-sm text-slate-400">
+            Oppdater informasjon for valgt kontroll i SoA.
+          </p>
+        </div>
       </div>
-
-      {error && <ErrorBanner message={error} />}
 
       <form
         onSubmit={handleSubmit}
@@ -147,7 +196,6 @@ export default function NewControlPage() {
             name="description"
             value={form.description}
             onChange={handleChange}
-            required
             rows={4}
             className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
           />
@@ -176,7 +224,7 @@ export default function NewControlPage() {
             </label>
             <textarea
               name="justification"
-              value={form.justification ?? ""}
+              value={form.justification}
               onChange={handleChange}
               rows={3}
               className="w-full rounded-xl bg-slate-950/80 border border-slate-700 px-3 py-2 text-sm text-slate-50 focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -194,10 +242,9 @@ export default function NewControlPage() {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-medium text-slate-950 shadow-[0_0_24px_rgba(139,92,246,0.7)] hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-60"
+            className="inline-flex items-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-2 text-xs font-medium text-slate-950 shadow-[0_0_24px_rgba(139,92,246,0.7)] hover:from-violet-400 hover:to-fuchsia-400"
           >
-            {isSubmitting ? "Lagrer…" : "Opprett kontroll"}
+            Lagre endringer
           </button>
         </div>
       </form>
