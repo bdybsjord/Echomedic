@@ -198,17 +198,6 @@ Videre arbeid kan inkludere:
 
 ---
 
-## Deploy
-
-Applikasjonen kan deployes til for eksempel **Vercel** eller **Netlify**.
-
-* Build-kommando: `pnpm run build`
-* Output-mappe: `dist/`
-
-Nødvendige `VITE_*`-miljøvariabler må settes i produksjonsmiljøet.
-
----
-
 ## Dokumentasjon og vedlegg
 
 Se `docs/`-mappen for innleveringsdokumenter og vedlegg, inkludert:
