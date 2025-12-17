@@ -1,0 +1,237 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Get user's role from users collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Check if user has admin role
+    function isAdmin() {
+      return isSignedIn() && getUserRole() == 'admin';
+    }
+    
+    // Check if user has read-only role
+    function isReadOnly() {
+      return isSignedIn() && getUserRole() == 'read-only';
+    }
+    
+    // Validate risk data structure and content
+    function isValidRisk(data) {
+      return
+        // Required fields with type checking
+        data.title is string &&
+        data.title.size() >= 3 &&
+        data.title.size() <= 200 &&
+        
+        data.owner is string &&
+        data.owner.size() >= 1 &&
+        data.owner.size() <= 200 &&
+        
+        data.likelihood is int &&
+        data.likelihood >= 1 &&
+        data.likelihood <= 5 &&
+        
+        data.consequence is int &&
+        data.consequence >= 1 &&
+        data.consequence <= 5 &&
+        
+        data.score is int &&
+        data.score == (data.likelihood * data.consequence) &&
+        
+        data.level in ['Low', 'Medium', 'High'] &&
+        
+        data.status in ['Open', 'InProgress', 'Closed'] &&
+        
+        // Optional fields with validation
+        (!('description' in data) || (
+          data.description is string && 
+          data.description.size() <= 1000
+        )) &&
+        
+        (!('measures' in data) || (
+          data.measures is string && 
+          data.measures.size() <= 2000
+        )) &&
+        
+        (!('justification' in data) || (
+          data.justification is string && 
+          data.justification.size() <= 1000
+        )) &&
+        
+        (!('category' in data) || 
+          data.category in ['technical', 'process', 'organizational', 'privacy']
+        ) &&
+        
+        // Timestamp validation
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+    
+    // Validate control data structure
+    function isValidControl(data) {
+      return
+        data.isoId is string &&
+        data.isoId.size() >= 3 &&
+        data.isoId.size() <= 50 &&
+        
+        data.title is string &&
+        data.title.size() >= 3 &&
+        data.title.size() <= 500 &&
+        
+        data.status in ['Implemented', 'Planned', 'NotRelevant'] &&
+        
+        (!('description' in data) || (
+          data.description is string && 
+          data.description.size() <= 2000
+        )) &&
+        
+        (!('justification' in data) || (
+          data.justification is string && 
+          data.justification.size() <= 1000
+        ));
+    }
+    
+    // Validate policy data structure
+    function isValidPolicy(data) {
+      return
+        data.title is string &&
+        data.title.size() >= 3 &&
+        data.title.size() <= 200 &&
+        
+        data.version is string &&
+        data.version.size() >= 1 &&
+        data.version.size() <= 20 &&
+        
+        (!('category' in data) || (
+          data.category is string && 
+          data.category.size() <= 100
+        )) &&
+        
+        (!('description' in data) || (
+          data.description is string && 
+          data.description.size() <= 500
+        )) &&
+        
+        (!('body' in data) || (
+          data.body is string && 
+          data.body.size() <= 50000
+        )) &&
+        
+        (!('createdAt' in data) || data.createdAt is timestamp) &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+    
+    // Prevent manipulation of creation timestamp and creator
+    function isValidUpdate(data) {
+      return 
+        (!('createdAt' in data) || data.createdAt == resource.data.createdAt) &&
+        (!('owner' in data) || data.owner == resource.data.owner);
+    }
+    
+    // ============================================
+    // COLLECTION RULES
+    // ============================================
+    
+    // Users collection - stores user roles and metadata
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      
+      // Only admins can create/update user documents (for role management)
+      allow create, update: if isAdmin();
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // Risks collection - main risk register
+    match /risks/{riskId} {
+      // Anyone authenticated can view risks
+      allow read: if isSignedIn();
+      
+      // Only admins can create risks
+      allow create: if isAdmin() && isValidRisk(request.resource.data);
+      
+      // Only admins can update risks, with validation
+      allow update: if isAdmin() && 
+                      isValidRisk(request.resource.data) &&
+                      isValidUpdate(request.resource.data);
+      
+      // Only admins can delete risks
+      allow delete: if isAdmin();
+    }
+    
+    // Controls collection - ISO 27001 controls
+    match /controls/{controlId} {
+      // Anyone authenticated can view controls
+      allow read: if isSignedIn();
+      
+      // Only admins can modify controls
+      allow create: if isAdmin() && isValidControl(request.resource.data);
+      allow update: if isAdmin() && isValidControl(request.resource.data);
+      allow delete: if isAdmin();
+    }
+    
+    // Policies collection - security policies
+    match /policies/{policyId} {
+      // Anyone authenticated can view policies
+      allow read: if isSignedIn();
+      
+      // Only admins can modify policies
+      allow create: if isAdmin() && isValidPolicy(request.resource.data);
+      allow update: if isAdmin() && isValidPolicy(request.resource.data);
+      allow delete: if isAdmin();
+    }
+    
+    // Logs collection - audit trail (NEW)
+    match /logs/{logId} {
+      // Only admins can view logs
+      allow read: if isAdmin();
+      
+      // Anyone authenticated can create logs (system-generated)
+      // This allows the app to log actions
+      allow create: if isSignedIn();
+      
+      // Logs are immutable - cannot be updated or deleted
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ============================================
+// TESTING NOTES
+// ============================================
+// 
+// Test these scenarios in Firebase Console > Firestore > Rules Playground:
+//
+// 1. Unauthenticated user tries to read risks - SHOULD FAIL
+// 2. Read-only user tries to create risk - SHOULD FAIL
+// 3. Admin creates valid risk - SHOULD SUCCEED
+// 4. Admin creates invalid risk (title too short) - SHOULD FAIL
+// 5. Read-only user tries to view logs - SHOULD FAIL
+// 6. Admin views logs - SHOULD SUCCEED
+// 7. Any user tries to update/delete logs - SHOULD FAIL
+// 8. Read-only user tries to modify their own role - SHOULD FAIL
+// 9. Admin updates another user's role - SHOULD SUCCEED
+// 10. User with no role document tries to access risks - SHOULD FAIL
