@@ -18,10 +18,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState(() => {
-    // Lazy init: kjøres kun ved første render
-    if (typeof window === "undefined") {
-      return "leder@echomedic.no";
-    }
+    if (typeof window === "undefined") return "leder@echomedic.no";
     const last = localStorage.getItem(LAST_USER_KEY);
     return last ?? "leder@echomedic.no";
   });
@@ -85,13 +82,15 @@ export default function Login() {
         localStorage.setItem(LAST_USER_KEY, email.trim().toLowerCase());
       }
 
-      // Optional: gå til dashboard etter innlogging
       navigate("/", { replace: true });
     } catch (err: unknown) {
       let message = "Innlogging feilet. Prøv igjen.";
       if (typeof err === "object" && err && "code" in err) {
         const code = (err as { code?: string }).code;
-        if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+        if (
+          code === "auth/invalid-credential" ||
+          code === "auth/wrong-password"
+        ) {
           message = "Feil e-post eller passord.";
         } else if (code === "auth/user-not-found") {
           message = "Ingen bruker med denne e-posten.";
@@ -121,8 +120,9 @@ export default function Login() {
             </h1>
             <p className="mt-4 max-w-md text-sm text-slate-300">
               Logg inn for å få oversikt over sikkerhetsrisikoer, tiltak og
-              modenhet på tvers av Echomedic sine løsninger. Denne portalen er
-              en intern prototype utviklet i PRO203 Smidig prosjekt.
+              modenhet på tvers av Echomedic sine løsninger. Portalen støtter
+              strukturert arbeid med risikovurdering, etterlevelse og intern
+              oppfølging.
             </p>
           </div>
 
@@ -133,11 +133,10 @@ export default function Login() {
               </div>
               <div>
                 <p className="font-semibold text-slate-100">
-                  Sanntidsoversikt over risiko
+                  Oversikt og prioritering
                 </p>
                 <p className="text-slate-400">
-                  Dashboardet prioriterer røde risikoer og forslag til tiltak
-                  for ledelsen.
+                  Dashboardet fremhever risikonivå, status og anbefalte tiltak.
                 </p>
               </div>
             </div>
@@ -147,12 +146,10 @@ export default function Login() {
                 <span className="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.9)]" />
               </div>
               <div>
-                <p className="font-semibold text-slate-100">
-                  Bygget for Normen & ISO 27001
-                </p>
+                <p className="font-semibold text-slate-100">GRC og etterlevelse</p>
                 <p className="text-slate-400">
-                  Designet for å støtte systematisk risikostyring og
-                  dokumentasjon for revisjon.
+                  Støtter kontroller, policyer og dokumentasjon som del av et
+                  helhetlig styringssystem.
                 </p>
               </div>
             </div>
@@ -163,17 +160,14 @@ export default function Login() {
         <Card className="max-w-md w-full mx-auto">
           <div className="mb-6">
             <p className="text-xs font-semibold tracking-[0.2em] text-cyan-300 uppercase">
-              Sikker lederinnlogging
+              Sikker innlogging
             </p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-50">
-              Logg inn til risiko-dashboard
+              Logg inn til risikoportalen
             </h2>
             <p className="mt-1 text-xs text-slate-400">
-              Bruk lederbruker{" "}
-              <span className="font-mono text-cyan-300">
-                leder@echomedic.no
-              </span>{" "}
-              fra Firebase Auth i Sprint 2.
+              Bruk din Echomedic-konto for å få tilgang til intern
+              sikkerhetsoversikt.
             </p>
           </div>
 
@@ -208,9 +202,16 @@ export default function Login() {
                 />
                 <span>Husk meg på denne enheten</span>
               </label>
+
+              {/* hvis dere ikke har flow: behold som placeholder uten funksjon */}
               <button
                 type="button"
                 className="text-xs font-medium text-sky-400 hover:text-sky-300"
+                onClick={() =>
+                  setFormError(
+                    "Passordbytte er ikke aktivert i denne løsningen ennå. Kontakt administrator ved behov."
+                  )
+                }
               >
                 Glemt passord?
               </button>
@@ -232,14 +233,13 @@ export default function Login() {
               loading={isSubmitting}
               disabled={disableSubmit}
             >
-              {isSubmitting ? "Logger inn..." : "Logg inn som leder"}
+              {isSubmitting ? "Logger inn..." : "Logg inn"}
             </Button>
           </form>
 
           <p className="mt-6 text-[11px] leading-relaxed text-slate-500">
-            Ved å logge inn bekrefter du at du er autorisert til å se
-            sikkerhetsinformasjon for Echomedic. Denne portalen er kun en
-            studie-prototype og skal ikke brukes til behandling av ekte
+            Ved å logge inn bekrefter du at du er autorisert til å se intern
+            sikkerhetsinformasjon. Portalen skal ikke brukes til behandling av
             pasientdata.
           </p>
         </Card>

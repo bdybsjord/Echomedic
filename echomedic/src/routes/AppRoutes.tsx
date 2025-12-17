@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../context/AuthProvider";
 
 import ProtectedRoute from "./ProtectedRoute";
-import AdminProtectedRoute from "./AdminProtectedRoute";
 
 import Login from "../pages/LoginPage";
 import Dashboard from "../pages/Dashboard";
@@ -27,6 +26,8 @@ import PolicyEditPage from "../pages/POLICY/PolicyEditPage";
 // ADMIN
 import { AdminAuditLogPage } from "../pages/AdminAuditLogPage";
 
+
+import UnauthorizedPage from "../pages/UnauthorizedPage";
 import AppShell from "../layout/AppShell";
 
 export const AppRoutes = () => {
@@ -34,8 +35,9 @@ export const AppRoutes = () => {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public route */}
+          {/* Public */}
           <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Protected shell */}
           <Route
@@ -71,12 +73,15 @@ export const AppRoutes = () => {
             <Route
               path="admin/audit-log"
               element={
-                <AdminProtectedRoute>
+                <ProtectedRoute requireAdmin>
                   <AdminAuditLogPage />
-                </AdminProtectedRoute>
+                </ProtectedRoute>
               }
             />
           </Route>
+
+          {/* fallback (valgfritt) */}
+          {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
         </Routes>
       </AuthProvider>
     </BrowserRouter>

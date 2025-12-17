@@ -4,10 +4,14 @@ import type { LoginRedirectState } from "../context/authTypes";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
+  requireAdmin?: boolean;
 };
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isLoggedIn, isLoading } = useAuth();
+export default function ProtectedRoute({
+  children,
+  requireAdmin = false,
+}: ProtectedRouteProps) {
+  const { isLoggedIn, isLoading, user } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -26,6 +30,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       from: { pathname: location.pathname },
     };
     return <Navigate to="/login" replace state={state} />;
+  }
+
+  if (requireAdmin && user?.role !== "admin") {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
